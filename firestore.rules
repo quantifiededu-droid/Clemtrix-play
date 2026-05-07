@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 1. Common Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function isEmailVerified() { return request.auth.token.email_verified == true; }
+
+    // 2. Entity Validations
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'name', 'skillLevel']) &&
+             data.email is string && data.email.size() <= 256 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.skillLevel in ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
+    }
+
+    function isValidProgress(data) {
+      return data.keys().hasAll(['userId', 'lessonId', 'completed']) &&
+             data.userId == request.auth.uid &&
+             isValidId(data.lessonId) &&
+             data.completed is bool;
+    }
+
+    function isValidQuizAttempt(data) {
+      return data.keys().hasAll(['userId', 'lessonId', 'score', 'totalQuestions']) &&
+             data.userId == request.auth.uid &&
+             data.score is int && data.score >= 0 && data.score <= data.totalQuestions &&
+             isValidId(data.lessonId);
+    }
+
+    // 3. Match Blocks
+    match /users/{userId} {
+      allow read: if isSignedIn(); // Allow reading profiles (potentially limited by frontend)
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'image', 'skillLevel', 'updatedAt']);
+    }
+
+    match /lessons/{lessonId} {
+      allow read: if true; // Lessons are public
+      allow write: if false; // Only admin (via console/server)
+    }
+
+    match /progress/{progressId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidProgress(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner(existing().userId) && isValidProgress(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'completedAt', 'score']);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /quizAttempts/{attemptId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidQuizAttempt(incoming()) && incoming().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

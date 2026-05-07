@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and skill level information.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "skillLevel": { "type": "string", "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "name", "skillLevel"]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "A piano lesson with content and quiz questions.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "skillLevel": { "type": "string", "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"] },
+        "order": { "type": "integer" },
+        "content": { "type": "array" },
+        "estimatedMinutes": { "type": "integer" }
+      },
+      "required": ["title", "description", "skillLevel", "order"]
+    },
+    "Progress": {
+      "title": "Progress",
+      "description": "Tracks a user's progress on a specific lesson.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "score": { "type": "integer" }
+      },
+      "required": ["userId", "lessonId", "completed"]
+    },
+    "QuizAttempt": {
+      "title": "QuizAttempt",
+      "description": "A record of a user taking a quiz for a lesson.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "answers": { "type": "object" },
+        "score": { "type": "integer" },
+        "totalQuestions": { "type": "integer" },
+        "passedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "lessonId", "score", "totalQuestions"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "lessons": {
+      "schema": "Lesson",
+      "description": "Piano lessons."
+    },
+    "progress": {
+      "schema": "Progress",
+      "description": "User progress per lesson."
+    },
+    "quizAttempts": {
+      "schema": "QuizAttempt",
+      "description": "History of quiz attempts."
+    }
+  }
+}
