@@ -327,6 +327,7 @@ export default function Dashboard() {
                   key={lesson.id}
                   lesson={lesson}
                   isCompleted={isCompleted}
+                  isStarted={!!progress[lesson.id]}
                   isLocked={isLocked || (getGlobalOrder(lesson.id) > 10 && !userData?.is_premium)}
                   nextToLearn={nextToLearn}
                   onClick={() => !isLocked && handleLessonClick(lesson.id)}

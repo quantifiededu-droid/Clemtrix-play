@@ -14,6 +14,28 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkExistingProfile() {
+      if (!auth.currentUser) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', auth.currentUser.uid)
+          .single();
+        if (data && mounted) {
+          navigate('/dashboard');
+        }
+      } catch (e) {
+        // No profile yet, stay on onboarding
+      }
+    }
+    checkExistingProfile();
+
+    return () => { mounted = false; };
+  }, [navigate]);
 
   const handleComplete = async () => {
     if (!auth.currentUser) {
@@ -28,13 +50,13 @@ export default function OnboardingPage() {
         .from('profiles')
         .upsert({
           id: auth.currentUser.uid,
-          email: auth.currentUser.email,
-          name: auth.currentUser.displayName,
+          email: auth.currentUser.email || '',
+          name: auth.currentUser.displayName || 'Pianist',
           skill_level: skillLevel,
           goal: goal,
           is_premium: false, // Default to false
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'id' });
       
       if (upsertError) {
         console.error('Supabase error:', upsertError);

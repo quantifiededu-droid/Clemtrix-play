@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth, googleProvider, signInWithPopup } from '../lib/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { supabase } from '../lib/supabase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  updateProfile,
+  sendPasswordResetEmail 
+} from 'firebase/auth';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Layout';
 import { Music, Mail, Lock, User, Github } from 'lucide-react';
@@ -20,14 +26,16 @@ type FormData = z.infer<typeof schema>;
 export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: FormData) => {
     setError(null);
+    setSuccess(null);
     setLoading(true);
     try {
       if (mode === 'signup') {
@@ -47,16 +55,50 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleForgotPassword = async () => {
+    const email = getValues('email');
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate('/onboarding');
+      await sendPasswordResetEmail(auth, email);
+      setSuccess('Password reset email sent! Please check your inbox.');
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      
+      // Check if profile exists in Supabase
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', result.user.uid)
+        .single();
+      
+      if (profile) {
+        navigate('/dashboard');
+      } else {
+        navigate('/onboarding');
+      }
     } catch (e: any) {
       if (e.code === 'auth/unauthorized-domain') {
-        setError('Unauthorized Domain: Please add this domain to your Firebase Console under Auth > Settings > Authorized Domains.');
+        const domain = window.location.hostname;
+        setError(`Unauthorized Domain (${domain}): Please add this domain to your Firebase Console under Auth > Settings > Authorized Domains.`);
       } else {
         setError(e.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,6 +122,12 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           {error && (
             <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-100 italic">
+              {success}
             </div>
           )}
 
@@ -118,7 +166,13 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                   <Lock className="w-4 h-4 mr-2" /> Password
                 </label>
                 {mode === 'login' && (
-                  <Link to="#" className="text-xs text-indigo-600 hover:underline">Forgot password?</Link>
+                  <button 
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs text-indigo-600 hover:underline"
+                  >
+                    Forgot password?
+                  </button>
                 )}
               </div>
               <input

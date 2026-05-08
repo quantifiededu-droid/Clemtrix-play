@@ -17,7 +17,7 @@ import {
   Keyboard,
   ArrowRight
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LessonPage() {
   const { lessonId } = useParams();
@@ -29,6 +29,9 @@ export default function LessonPage() {
   const globalOrder = lessonIndex + 1;
   const contentRef = useRef<HTMLDivElement>(null);
   const [scrolledToEnd, setScrolledToEnd] = useState(false);
+
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [lastScrollPos, setLastScrollPos] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -62,6 +65,10 @@ export default function LessonPage() {
 
         if (mounted && progressData) {
           setCompleted(progressData.completed);
+          if (progressData.metadata?.scrollPos > 100 && !progressData.completed) {
+            setLastScrollPos(progressData.metadata.scrollPos);
+            setShowResumePrompt(true);
+          }
         }
       } catch (error) {
         console.error('Error checking lesson progress:', error);
@@ -83,13 +90,48 @@ export default function LessonPage() {
     const handleScroll = () => {
       if (!contentRef.current) return;
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      
+      // Track scroll for "Continue" feature
+      if (scrollTop > 500 && !completed) {
+        saveProgress(scrollTop);
+      }
+
       if (scrollTop + clientHeight >= scrollHeight - 100) {
         setScrolledToEnd(true);
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lessonId]);
+    
+    let timer: any;
+    const debouncedScroll = () => {
+      clearTimeout(timer);
+      timer = setTimeout(handleScroll, 1000);
+    };
+
+    window.addEventListener('scroll', debouncedScroll);
+    return () => {
+      window.removeEventListener('scroll', debouncedScroll);
+      clearTimeout(timer);
+    };
+  }, [lessonId, completed]);
+
+  const saveProgress = async (scrollPos: number) => {
+    if (!auth.currentUser || !lessonId) return;
+    try {
+      await supabase.from('progress').upsert({
+        user_id: auth.currentUser.uid,
+        lesson_id: lessonId,
+        metadata: { scrollPos },
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id,lesson_id' });
+    } catch (e) {
+      // Slient fail for auto-save
+    }
+  };
+
+  const handleResume = () => {
+    window.scrollTo({ top: lastScrollPos, behavior: 'smooth' });
+    setShowResumePrompt(false);
+  };
 
   if (!lesson) return <div>Lesson not found</div>;
 
@@ -112,6 +154,32 @@ export default function LessonPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 pb-20">
+      {/* Resume Prompt */}
+      <AnimatePresence>
+        {showResumePrompt && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+          >
+            <Card className="bg-indigo-600 text-white p-4 shadow-2xl flex items-center gap-4 pointer-events-auto">
+              <div className="flex-1">
+                <p className="text-sm font-bold">Continue where you left off?</p>
+                <p className="text-[10px] text-indigo-100 uppercase tracking-widest font-bold">We saved your progress from last time</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white" onClick={() => setShowResumePrompt(false)}>
+                  Start Over
+                </Button>
+                <Button size="sm" className="bg-white text-indigo-600 hover:bg-indigo-50" onClick={handleResume}>
+                  Continue
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-16 z-30">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">

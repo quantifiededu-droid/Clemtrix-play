@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 interface LessonCardProps {
   lesson: any;
   isCompleted: boolean;
+  isStarted: boolean;
   isLocked: boolean;
   nextToLearn: boolean;
   onClick: () => void;
@@ -14,6 +15,7 @@ interface LessonCardProps {
 export const LessonCard: React.FC<LessonCardProps> = ({ 
   lesson, 
   isCompleted, 
+  isStarted,
   isLocked, 
   nextToLearn, 
   onClick 
@@ -33,13 +35,18 @@ export const LessonCard: React.FC<LessonCardProps> = ({
           "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
           isLocked ? "bg-slate-800 text-slate-600" : "bg-slate-800 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white"
         )}>
-          {isLocked ? <Lock className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+          {isLocked ? <Lock className="w-5 h-5" /> : (isStarted && !isCompleted ? <Clock className="w-5 h-5" /> : <Play className="w-5 h-5" />)}
         </div>
-        {isCompleted && (
-          <div className="bg-emerald-500/20 p-1.5 rounded-full">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {isStarted && !isCompleted && (
+            <Badge variant="amber" className="px-2 py-0.5 text-[8px] bg-amber-500/10 text-amber-500 border-none">Started</Badge>
+          )}
+          {isCompleted && (
+            <div className="bg-emerald-500/20 p-1.5 rounded-full">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="space-y-1">
