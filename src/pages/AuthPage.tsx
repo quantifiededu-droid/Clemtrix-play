@@ -52,7 +52,11 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       await signInWithPopup(auth, googleProvider);
       navigate('/onboarding');
     } catch (e: any) {
-      setError(e.message);
+      if (e.code === 'auth/unauthorized-domain') {
+        setError('Unauthorized Domain: Please add this domain to your Firebase Console under Auth > Settings > Authorized Domains.');
+      } else {
+        setError(e.message);
+      }
     }
   };
 

@@ -12,14 +12,19 @@ export default function OnboardingPage() {
   const [skillLevel, setSkillLevel] = useState('');
   const [goal, setGoal] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleComplete = async () => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      setErrorMsg("You must be logged in to save your profile.");
+      return;
+    }
     setLoading(true);
+    setErrorMsg(null);
     try {
       // Save to Supabase profiles table
-      const { error } = await supabase
+      const { error: upsertError } = await supabase
         .from('profiles')
         .upsert({
           id: auth.currentUser.uid,
@@ -31,11 +36,15 @@ export default function OnboardingPage() {
           updated_at: new Date().toISOString(),
         });
       
-      if (error) throw error;
+      if (upsertError) {
+        console.error('Supabase error:', upsertError);
+        throw new Error(upsertError.message || "Failed to save profile. Please ensure Supabase tables are set up correctly.");
+      }
       
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Error saving profile to Supabase:', error);
+    } catch (err: any) {
+      console.error('Error saving profile to Supabase:', err);
+      setErrorMsg(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -126,6 +135,13 @@ export default function OnboardingPage() {
                   onClick={() => setGoal('self-taught')}
                 />
               </div>
+
+              {errorMsg && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm font-medium">
+                  {errorMsg}
+                </div>
+              )}
+
               <div className="pt-8 flex space-x-4">
                 <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
                 <Button className="flex-1" onClick={handleComplete} isLoading={loading} disabled={!goal}>

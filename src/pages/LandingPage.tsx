@@ -1,5 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Card, Badge } from '../components/ui/Layout';
 import { 
@@ -10,16 +10,130 @@ import {
   ArrowRight, 
   CheckCircle2, 
   Star,
-  Users
+  Users,
+  X,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+
+const DEMO_SLIDES = [
+  {
+    title: "Lesson 1-5: The Foundations",
+    description: "Start from zero. Master the musical alphabet, hand posture, and your first 5 notes. Our interactive keyboard diagnostics ensure your hand shape is perfect from day one.",
+    image: "https://images.unsplash.com/photo-1552422535-c45813c61732?auto=format&fit=crop&q=80&w=800",
+    features: ["Keyboard Layout", "Note Recognition", "Finger Numbering"]
+  },
+  {
+    title: "Lesson 6-10: Coordination",
+    description: "Move beyond simple scales. Learn basic melodies like 'Mary Had a Little Lamb' and 'Ode to Joy'. Begin the legendary 'Hands Together' training to build independent finger control.",
+    image: "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&q=80&w=800",
+    features: ["Both Hands Practice", "Rhythm Drills", "Beginner Repertoire"]
+  },
+  {
+    title: "Lesson 11-16: Intermediate Theory",
+    description: "Unlock the secrets of harmony. Master Major/Minor triads, dynamics (piano vs. forte), and essential techniques like 'Thumb Under' for fluid scale transitions.",
+    image: "https://images.unsplash.com/photo-1514119412350-e174d90d280e?auto=format&fit=crop&q=80&w=800",
+    features: ["Chords & Inversions", "Ledger Lines", "Expression Control"]
+  },
+  {
+    title: "Lesson 17-22: Advanced Masterclass",
+    description: "The final push. Conquer complex pieces like 'Für Elise', learn professional pedal techniques, and dive into the fundamentals of jazz and blues improvisation.",
+    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&q=80&w=800",
+    features: ["Pedal Techniques", "Improvisation", "Advanced Repertoire"]
+  }
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [showDemo, setShowDemo] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % DEMO_SLIDES.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length);
 
   return (
     <div className="flex flex-col bg-primary text-slate-100 min-h-screen">
+      {/* Demo Modal */}
+      <AnimatePresence>
+        {showDemo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="max-w-4xl w-full bg-slate-900 rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowDemo(false)}
+                className="absolute top-6 right-6 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white/50 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2">
+                <div className="relative h-64 md:h-96 md:h-auto overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={currentSlide}
+                      src={DEMO_SLIDES[currentSlide].image}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </AnimatePresence>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent md:bg-gradient-to-r" />
+                </div>
+
+                <div className="p-8 md:p-12 flex flex-col justify-center">
+                  <span className="text-indigo-400 font-bold tracking-widest text-xs uppercase mb-2">Masterclass Preview</span>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentSlide}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <h2 className="text-3xl font-bold mb-4">{DEMO_SLIDES[currentSlide].title}</h2>
+                      <p className="text-slate-400 mb-8 leading-relaxed text-sm">
+                        {DEMO_SLIDES[currentSlide].description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-10">
+                        {DEMO_SLIDES[currentSlide].features.map((f, i) => (
+                          <span key={i} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-medium uppercase tracking-wider text-indigo-200">
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex gap-2">
+                      <button onClick={prevSlide} className="p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-colors">
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button onClick={nextSlide} className="p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-colors">
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {DEMO_SLIDES.map((_, i) => (
+                        <div key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'bg-indigo-500 w-4' : 'bg-white/10'}`} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Hero Section */}
       <section className="relative h-screen min-h-[800px] flex items-center justify-center overflow-hidden">
         {/* Background Video Layer */}
@@ -61,7 +175,12 @@ export default function LandingPage() {
                   Start Your Journey
                   <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </Button>
-                <Button variant="outline" size="lg" className="rounded-2xl px-12 py-6 border-white/20 hover:bg-white/5 backdrop-blur-sm">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="rounded-2xl px-12 py-6 border-white/20 hover:bg-white/5 backdrop-blur-sm"
+                  onClick={() => setShowDemo(true)}
+                >
                   View Demo
                 </Button>
               </div>

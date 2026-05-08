@@ -30,37 +30,58 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+
     async function fetchData() {
-      if (!auth.currentUser) return;
+      if (!auth.currentUser) {
+        // Just in case, set loading to false if we somehow reach here without a user
+        if (mounted) setLoading(false);
+        return;
+      }
       
       try {
         // Fetch User Data from Supabase
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', auth.currentUser.uid)
           .single();
         
-        setUserData(profile);
+        if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is empty result
+          console.error('Profile fetch error:', profileError);
+        }
+        
+        if (mounted) setUserData(profile || null);
 
         // Fetch Progress from Supabase
-        const { data: progressData } = await supabase
+        const { data: progressData, error: progressError } = await supabase
           .from('progress')
           .select('*')
           .eq('user_id', auth.currentUser.uid);
+
+        if (progressError) {
+          console.error('Progress fetch error:', progressError);
+        }
 
         const progressMap: any = {};
         progressData?.forEach(d => {
           progressMap[d.lesson_id] = d;
         });
-        setProgress(progressMap);
+        
+        if (mounted) setProgress(progressMap);
       } catch (error) {
         console.error('Error fetching data from Supabase:', error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
+
+    // Use a small delay or trust auth.currentUser if we are in a ProtectedRoute
     fetchData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {
@@ -103,8 +124,12 @@ export default function Dashboard() {
     navigate(`/lessons/${lessonId}`);
   };
 
+  const [promoCode, setPromoCode] = useState('');
+  const [promoError, setPromoError] = useState('');
+
   const handleUnlockPremium = async () => {
     if (!auth.currentUser) return;
+    
     // Simulate payment verification for demo
     const { error } = await supabase
       .from('profiles')
@@ -117,6 +142,14 @@ export default function Dashboard() {
       if (selectedLessonId) {
         navigate(`/lessons/${selectedLessonId}`);
       }
+    }
+  };
+
+  const handleApplyPromo = () => {
+    if (promoCode.trim() === 'Quantified97') {
+      handleUnlockPremium();
+    } else {
+      setPromoError('Invalid promo code');
     }
   };
 
@@ -142,20 +175,43 @@ export default function Dashboard() {
                 <p className="text-slate-400 mb-8">
                   You've reached the end of the free curriculum! Unlock lessons 11-22 to master advanced piano techniques.
                 </p>
-                <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/10">
+                
+                <div className="bg-white/5 rounded-2xl p-6 mb-6 border border-white/10">
                   <div className="flex justify-between items-center text-sm mb-4">
                     <span className="text-slate-400">Premium Access</span>
                     <span className="text-white font-bold">$2.00</span>
                   </div>
                   <Button 
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 py-6 text-lg font-bold rounded-xl flex items-center justify-center gap-2"
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 py-6 text-lg font-bold rounded-xl flex items-center justify-center gap-2 mb-4"
                     onClick={() => {
                         window.open('https://paypal.com/paypalme/CasareKumasi', '_blank');
                     }}
                   >
                     Pay with PayPal <ExternalLink className="w-4 h-4" />
                   </Button>
+                  
+                  <div className="relative mt-6 pt-6 border-t border-white/10">
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-3">Or Use Promo Code</p>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text"
+                        placeholder="Enter Code"
+                        className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm w-full outline-none focus:border-indigo-500 transition-colors"
+                        value={promoCode}
+                        onChange={(e) => {
+                          setPromoCode(e.target.value);
+                          setPromoError('');
+                        }}
+                      />
+                      <Button size="sm" onClick={handleApplyPromo}>Apply</Button>
+                    </div>
+                    {promoError && <p className="text-red-400 text-[10px] mt-1 text-left">{promoError}</p>}
+                    <p className="text-[10px] text-slate-500 mt-3 text-left">
+                      Contact <span className="text-indigo-400 font-bold">Quantifiedlab@gmail.com</span> for promo codes.
+                    </p>
+                  </div>
                 </div>
+
                 <div className="flex flex-col gap-3">
                   <Button variant="outline" className="w-full py-4 border-white/10 text-white hover:bg-white/5" onClick={() => setShowPaywall(false)}>
                     Maybe Later
@@ -163,12 +219,6 @@ export default function Dashboard() {
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
                     One-time payment for lifetime access
                   </p>
-                  <button 
-                    onClick={handleUnlockPremium}
-                    className="text-[10px] text-indigo-400/50 hover:text-indigo-400 underline"
-                  >
-                    Demo: Apply Premium Status
-                  </button>
                 </div>
               </div>
             </Card>

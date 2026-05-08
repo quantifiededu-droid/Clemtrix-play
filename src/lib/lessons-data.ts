@@ -35,23 +35,26 @@ export const lessons: Lesson[] = [
   // BEGINNER
   {
     id: 'beg-1',
-    title: 'Meet Your Piano',
-    description: 'Keyboard layout, white/black keys, octaves, and finding Middle C.',
+    title: 'Piano Lesson 1 — Meet the Keyboard',
+    description: 'Recognize the musical alphabet, find all the C notes, and understand patterns.',
     skillLevel: SkillLevel.BEGINNER,
     order: 1,
-    estimatedMinutes: 5,
+    estimatedMinutes: 10,
     content: [
-      { type: 'text', content: 'Welcome to Clemtrix Play! The piano is a beautiful instrument with a repeating pattern of white and black keys. Most pianos have 88 keys, but the pattern is simple once you see it.' },
-      { type: 'tip', content: 'Look for groups of two and three black keys. This pattern repeats across the entire keyboard.' },
-      { type: 'piano', highlightedKeys: ['C4'], content: 'This is Middle C. It is located just to the left of the group of two black keys near the center of the piano.' },
-      { type: 'exercise', steps: ['Find all the groups of two black keys.', 'Find all the groups of three black keys.', 'Point to every C on your keyboard.'] }
+      { type: 'text', content: '### Goal for Today\nBy the end of today, you should:\n- Recognize the musical alphabet,\n- Find all the C notes on a keyboard,\n- And understand how keys repeat.' },
+      { type: 'text', content: '### 1. The Musical Alphabet\nMusic only uses 7 letter names:\n\n**A B C D E F G**\n\nThen it repeats again:\n**A B C D E F G A B C...**\n\nUnlike school alphabets, music keeps cycling.' },
+      { type: 'text', content: '### 2. Understanding the Keyboard Pattern\nLook closely at a keyboard. You’ll notice black keys come in groups:\n- **2 black keys**\n- then **3 black keys**\n- then repeats.' },
+      { type: 'tip', content: 'This pattern helps you find every note on the piano.' },
+      { type: 'text', content: '### 3. Finding the Note C\nThe note C is the white key immediately before the group of 2 black keys.\n\nEvery keyboard has many Cs. Find:\n- Low C\n- Middle C\n- High C' },
+      { type: 'piano', highlightedKeys: ['C4'], content: 'This is Middle C. Try to locate it on your screen or keyboard.' },
+      { type: 'exercise', steps: ['Using your right thumb only: Find a C', 'Press it slowly 10 times', 'Count evenly: 1, 2, 3, 4', 'Goal: relaxed hand, even sound, steady rhythm.'] },
+      { type: 'tip', content: '### 5. Beginner Rhythm Tip\nMusic is timing. A player with simple notes but good rhythm sounds better than someone fast with bad timing. So always count while playing.' }
     ],
     quizQuestions: [
-      { id: 'q1', question: 'How are black keys grouped on a piano?', options: ['Groups of 1 and 2', 'Groups of 2 and 3', 'Groups of 3 and 4', 'They are evenly spaced'], correctAnswer: 1, explanation: 'Black keys always appear in repeating groups of two and three.' },
-      { id: 'q2', question: 'Where is "C" located relative to the black keys?', options: ['Right of the 2-key group', 'Left of the 3-key group', 'Left of the 2-key group', 'Between the 3-key group'], correctAnswer: 2, explanation: 'C is always the white key directly to the left of the group of two black keys.' },
-      { id: 'q3', question: 'What is the name of the C key near the center of the piano?', options: ['Center C', 'Main C', 'Middle C', 'Root C'], correctAnswer: 2, explanation: 'The C key closest to the center is called Middle C.' },
-      { id: 'q4', question: 'How many keys does a standard full-size piano have?', options: ['66', '76', '88', '100'], correctAnswer: 2, explanation: 'A standard piano has 88 keys.' },
-      { id: 'q5', question: 'What is an octave?', options: ['A group of 10 keys', 'The distance between two notes of the same name', 'A type of black key', 'The highest note on a piano'], correctAnswer: 1, explanation: 'An octave is the interval between one musical pitch and another with double its frequency (e.g., C to the next C).' }
+      { id: 'q1', question: 'What are the 7 music letters?', options: ['A-G', 'A-Z', 'C-J', '1-7'], correctAnswer: 0, explanation: 'The musical alphabet uses A, B, C, D, E, F, and G.' },
+      { id: 'q2', question: 'How do black keys appear on the keyboard?', options: ['Randomly', 'Groups of 2 and 3', 'Groups of 1 and 4', 'They are all the same'], correctAnswer: 1, explanation: 'Black keys always repeat in a 2-3 group pattern.' },
+      { id: 'q3', question: 'How do you find the note C?', options: ['After 3 black keys', 'Before 2 black keys', 'Before 3 black keys', 'Middle of 2 black keys'], correctAnswer: 1, explanation: 'C is the white key to the left of the group of 2 black keys.' },
+      { id: 'q4', question: 'Is rhythm important in piano playing?', options: ['No', 'Sometimes', 'Yes, it is vital', 'Only for drums'], correctAnswer: 2, explanation: 'Rhythm is the foundation of music and timing.' }
     ]
   },
   {

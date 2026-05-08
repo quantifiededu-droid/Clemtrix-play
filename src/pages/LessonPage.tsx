@@ -31,8 +31,13 @@ export default function LessonPage() {
   const [scrolledToEnd, setScrolledToEnd] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     async function checkProgress() {
-      if (!auth.currentUser || !lessonId) return;
+      if (!auth.currentUser || !lessonId) {
+        if (mounted) setLoading(false);
+        return;
+      }
 
       try {
         // Check Access / Premium
@@ -43,7 +48,7 @@ export default function LessonPage() {
           .single();
         
         if (globalOrder > 10 && !profile?.is_premium) {
-          navigate('/dashboard');
+          if (mounted) navigate('/dashboard');
           return;
         }
 
@@ -55,19 +60,24 @@ export default function LessonPage() {
           .eq('lesson_id', lessonId)
           .single();
 
-        if (progressData) {
+        if (mounted && progressData) {
           setCompleted(progressData.completed);
         }
       } catch (error) {
         console.error('Error checking lesson progress:', error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
+
     setScrolledToEnd(false);
     checkProgress();
     window.scrollTo(0, 0);
-  }, [lessonId, globalOrder]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [lessonId, globalOrder, navigate]);
 
   useEffect(() => {
     const handleScroll = () => {
