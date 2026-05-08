@@ -279,14 +279,22 @@ export default function LessonPage() {
             ))}
           </div>
 
-          <div className="pt-12 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center">
-            <p className="text-gray-500 mb-6 text-center italic">
+          <div className="pt-12 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-4">
+            <p className="text-gray-500 mb-2 text-center italic">
               {completed ? "You've already mastered this lesson!" : "Finished reading? Test your knowledge with a quiz."}
             </p>
-            <Button size="lg" className="w-full md:w-auto min-w-[240px]" onClick={handleMarkRead}>
-              Take the Quiz
-              <ChevronRight className="ml-2 w-5 h-5" />
-            </Button>
+            <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
+              <Button size="lg" className="w-full md:w-auto min-w-[200px]" onClick={handleMarkRead}>
+                {completed ? "Review Quiz" : "Take the Quiz"}
+                <ChevronRight className="ml-2 w-5 h-5" />
+              </Button>
+              {completed && lessonIndex < allLessons.length - 1 && (
+                <Button size="lg" variant="outline" className="w-full md:w-auto min-w-[200px]" onClick={() => navigate(`/lessons/${allLessons[lessonIndex + 1].id}`)}>
+                  Next Lesson
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>

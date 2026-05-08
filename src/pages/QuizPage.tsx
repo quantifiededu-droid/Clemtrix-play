@@ -11,9 +11,10 @@ import confetti from 'canvas-confetti';
 import { cn } from '../lib/utils';
 
 export default function QuizPage() {
-  const { lessonId } = useParams();
+  const lessonId = useParams().lessonId;
   const navigate = useNavigate();
-  const lesson = allLessons.find(l => l.id === lessonId);
+  const lessonIndex = allLessons.findIndex(l => l.id === lessonId);
+  const lesson = allLessons[lessonIndex];
   const [currentStep, setCurrentStep] = useState(0); // 0 to questions.length-1, then results
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -133,10 +134,19 @@ export default function QuizPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {passed ? (
-              <Button size="lg" onClick={() => navigate('/dashboard')}>
-                Continue to Dashboard
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
+              <>
+                {lessonIndex < allLessons.length - 1 ? (
+                  <Button size="lg" onClick={() => navigate(`/lessons/${allLessons[lessonIndex + 1].id}`)}>
+                    Next Lesson
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                ) : (
+                  <Button size="lg" onClick={() => navigate('/dashboard')}>
+                    Continue to Dashboard
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                )}
+              </>
             ) : null}
             
             <Button size="lg" variant={passed ? "outline" : "primary"} onClick={handleRetake}>
