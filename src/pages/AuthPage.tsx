@@ -78,22 +78,27 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       
+      // Wait a moment for Supabase to potentially sync or just check profile
+      const user = result.user;
+      
       // Check if profile exists in Supabase
-      const { data: profile } = await supabase
+      const { data: profile, error: fetchError } = await supabase
         .from('profiles')
         .select('id')
-        .eq('id', result.user.uid)
-        .single();
+        .eq('id', user.uid)
+        .maybeSingle(); // Use maybeSingle to avoid error if not found
       
       if (profile) {
         navigate('/dashboard');
       } else {
+        // If not found, double check onboarding isn't already handled or redirect
         navigate('/onboarding');
       }
     } catch (e: any) {
       if (e.code === 'auth/unauthorized-domain') {
         const domain = window.location.hostname;
-        setError(`Unauthorized Domain (${domain}): Please add this domain to your Firebase Console under Auth > Settings > Authorized Domains.`);
+        setError(`Firebase Error: Unauthorized Domain (${domain}). 
+          FIX: Go to Firebase Console > Auth > Settings > Authorized Domains and add this domain.`);
       } else {
         setError(e.message);
       }

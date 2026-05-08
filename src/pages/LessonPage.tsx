@@ -154,29 +154,40 @@ export default function LessonPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 pb-20">
-      {/* Resume Prompt */}
+      {/* Resume Prompt Overlay */}
       <AnimatePresence>
         {showResumePrompt && (
           <motion.div 
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           >
-            <Card className="bg-indigo-600 text-white p-4 shadow-2xl flex items-center gap-4 pointer-events-auto">
-              <div className="flex-1">
-                <p className="text-sm font-bold">Continue where you left off?</p>
-                <p className="text-[10px] text-indigo-100 uppercase tracking-widest font-bold">We saved your progress from last time</p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white" onClick={() => setShowResumePrompt(false)}>
-                  Start Over
-                </Button>
-                <Button size="sm" className="bg-white text-indigo-600 hover:bg-indigo-50" onClick={handleResume}>
-                  Continue
-                </Button>
-              </div>
-            </Card>
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="max-w-md w-full"
+            >
+              <Card className="p-8 text-center border-none shadow-2xl relative overflow-hidden bg-white dark:bg-gray-900">
+                <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600">
+                  <Clock className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Welcome Back!</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-8">
+                  We saved your progress in <strong>"{lesson.title}"</strong>. Would you like to continue or start over?
+                </p>
+                
+                <div className="flex flex-col gap-3">
+                  <Button size="lg" className="w-full bg-indigo-600 hover:bg-indigo-500 py-6 text-lg font-bold" onClick={handleResume}>
+                    Continue where you left off
+                  </Button>
+                  <Button variant="outline" size="lg" className="w-full py-4" onClick={() => setShowResumePrompt(false)}>
+                    Start from the beginning
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
