@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState('');
   const [promoError, setPromoError] = useState('');
+  const [curriculumLevel, setCurriculumLevel] = useState<SkillLevel>(SkillLevel.BEGINNER);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -94,6 +95,12 @@ export default function Dashboard() {
     };
   }, [navigate]); // navigate is stable, but we can add auth.currentUser if we really want to реагировать на изменения пользователя
 
+  useEffect(() => {
+    if (userData?.skill_level) {
+      setCurriculumLevel(userData.skill_level);
+    }
+  }, [userData?.skill_level]);
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8 animate-pulse bg-gray-900/50 min-h-screen">
@@ -106,8 +113,7 @@ export default function Dashboard() {
     );
   }
 
-  const skillLevel = userData?.skill_level || SkillLevel.BEGINNER;
-  const filteredLessons = allLessons; // Show full curriculum
+  const filteredLessons = allLessons.filter(l => l.skillLevel === curriculumLevel);
   
   const completedCount = Object.values(progress).filter((p: any) => p.completed).length;
   const totalLessons = allLessons.length;
@@ -118,16 +124,17 @@ export default function Dashboard() {
     return allLessons.findIndex(l => l.id === lessonId) + 1;
   };
 
-  // Find next lesson globally
-  const nextLesson = allLessons.find((l, idx) => {
-    if (idx === 0) return !progress[l.id]?.completed;
-    const prevId = allLessons[idx-1].id;
-    return progress[prevId]?.completed && !progress[l.id]?.completed;
-  }) || allLessons[0];
+  // Find next lesson for the selected tab
+  const nextLessonInLevel = filteredLessons.find((l) => !progress[l.id]?.completed) || filteredLessons[0];
+  const isViewingCurrentLevel = curriculumLevel === (userData?.skill_level || SkillLevel.BEGINNER);
 
   const handleLessonClick = (lessonId: string) => {
-    const globalOrder = getGlobalOrder(lessonId);
-    if (globalOrder > 10 && !userData?.is_premium) {
+    const lesson = allLessons.find(l => l.id === lessonId);
+    if (!lesson) return;
+
+    // First 10 lessons of ANY level are free.
+    // Lessons beyond 10 (especially in Advanced) require premium.
+    if (lesson.order > 10 && !userData?.is_premium) {
       setSelectedLessonId(lessonId);
       setShowPaywall(true);
       return;
@@ -179,9 +186,9 @@ export default function Dashboard() {
                 <div className="w-16 h-16 bg-amber-400/20 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-400">
                   <DollarSign className="w-8 h-8" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Masterclass Locked</h2>
+                <h2 className="text-2xl font-bold mb-2">Continue Your Journey</h2>
                 <p className="text-slate-400 mb-8">
-                  You've reached the end of the free curriculum! Unlock lessons 11-22 to master advanced piano techniques.
+                  You've mastered the basics! Unlock the full curriculum beyond lesson 10 to reach the next level of your piano mastery.
                 </p>
                 
                 <div className="bg-white/5 rounded-2xl p-6 mb-6 border border-white/10">
@@ -244,26 +251,26 @@ export default function Dashboard() {
           <div className="relative z-10 h-full flex flex-col">
             <div className="flex gap-2 mb-4">
               <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white">
-                Next Lesson
+                {isViewingCurrentLevel ? "Your Next Step" : `Discover ${curriculumLevel}`}
               </span>
-              <Badge variant={skillLevel === 'BEGINNER' ? 'blue' : 'amber'} className="bg-amber-400 text-amber-950 border-none">
-                {skillLevel}
+              <Badge variant={curriculumLevel === SkillLevel.BEGINNER ? 'blue' : 'amber'} className="bg-amber-400 text-amber-950 border-none">
+                {curriculumLevel}
               </Badge>
             </div>
             
             <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight text-white">
-              {nextLesson?.title || 'Starting your journey'}
+              {nextLessonInLevel?.title || 'Explore curriculum'}
             </h2>
             <p className="text-indigo-100/70 max-w-sm text-sm leading-relaxed mb-8">
-              {nextLesson?.description || 'Pick up where you left off and master your piano skills.'}
+              {nextLessonInLevel?.description || 'Pick up where you left off and master your piano skills.'}
             </p>
             
             <Button 
               size="lg" 
               className="bg-white text-indigo-900 hover:bg-indigo-50 w-fit px-8 py-4 rounded-xl font-bold shadow-xl shadow-black/20"
-              onClick={() => handleLessonClick(nextLesson.id)}
+              onClick={() => handleLessonClick(nextLessonInLevel.id)}
             >
-              {getGlobalOrder(nextLesson?.id || '') > 10 && !userData?.is_premium ? 'Unlock Premium' : 'Resume Practice'}
+              {nextLessonInLevel?.order > 10 && !userData?.is_premium ? 'Unlock Premium' : 'Start Lesson'}
             </Button>
           </div>
           
@@ -276,6 +283,10 @@ export default function Dashboard() {
         {/* Progress Tracker Card */}
         <Card className="col-span-12 md:col-span-6 lg:col-span-4 p-6 flex flex-col justify-between">
           <div>
+            <div className="flex items-center gap-2 mb-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0 animate-pulse" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-amber-500">Physical Piano Required</p>
+            </div>
             <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center">
               <Trophy className="w-3 h-3 mr-2 text-amber-500" />
               Overall Progress
@@ -313,22 +324,36 @@ export default function Dashboard() {
 
         {/* Curriculum Content */}
         <div className="col-span-12 mt-8">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
             <h2 className="text-2xl font-bold flex items-center">
               <BookOpen className="w-6 h-6 mr-3 text-indigo-500" />
-              {skillLevel} Curriculum
+              Learning Path
             </h2>
-            <div className="flex items-center gap-2">
-               <span className="text-xs text-slate-500 uppercase font-bold tracking-widest mr-2">{totalLessons} Lessons total</span>
-               <Filter className="w-4 h-4 text-slate-500" />
+            
+            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl w-full md:w-auto">
+              {[SkillLevel.BEGINNER, SkillLevel.INTERMEDIATE, SkillLevel.ADVANCED].map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setCurriculumLevel(level)}
+                  className={cn(
+                    "flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+                    curriculumLevel === level 
+                      ? "bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400" 
+                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  )}
+                >
+                  {level.charAt(0) + level.slice(1).toLowerCase()}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredLessons.map((lesson, index) => {
+            {filteredLessons.map((lesson) => {
+              const lessonIdx = allLessons.findIndex(l => l.id === lesson.id);
               const isCompleted = progress[lesson.id]?.completed;
-              const isLocked = index > 0 && !progress[filteredLessons[index-1].id]?.completed;
-              const nextToLearn = nextLesson?.id === lesson.id;
+              const isLocked = lessonIdx > 0 && !progress[allLessons[lessonIdx-1].id]?.completed;
+              const nextToLearn = nextLessonInLevel?.id === lesson.id;
 
               return (
                 <LessonCard 
@@ -336,9 +361,10 @@ export default function Dashboard() {
                   lesson={lesson}
                   isCompleted={isCompleted}
                   isStarted={!!progress[lesson.id]}
-                  isLocked={isLocked || (getGlobalOrder(lesson.id) > 10 && !userData?.is_premium)}
+                  isLocked={isLocked || (lesson.order > 10 && !userData?.is_premium)}
                   nextToLearn={nextToLearn}
-                  onClick={() => !isLocked && handleLessonClick(lesson.id)}
+                  canSkip={true} /* New prop to allow clicking even if locked */
+                  onClick={() => handleLessonClick(lesson.id)}
                 />
               );
             })}

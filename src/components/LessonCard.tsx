@@ -9,6 +9,7 @@ interface LessonCardProps {
   isStarted: boolean;
   isLocked: boolean;
   nextToLearn: boolean;
+  canSkip?: boolean;
   onClick: () => void;
 }
 
@@ -18,6 +19,7 @@ export const LessonCard: React.FC<LessonCardProps> = ({
   isStarted,
   isLocked, 
   nextToLearn, 
+  canSkip,
   onClick 
 }) => {
   return (
@@ -25,8 +27,9 @@ export const LessonCard: React.FC<LessonCardProps> = ({
       onClick={onClick}
       className={cn(
         "p-6 cursor-pointer group transition-all relative overflow-hidden border-white/5",
-        isLocked && "opacity-40 cursor-not-allowed",
-        !isLocked && "hover:bg-white/10 hover:border-white/20 active:scale-[0.98]",
+        isLocked && !canSkip && "opacity-40 cursor-not-allowed",
+        isLocked && canSkip && "opacity-75 hover:opacity-100",
+        (!isLocked || canSkip) && "hover:bg-white/10 hover:border-white/20 active:scale-[0.98]",
         nextToLearn && "ring-2 ring-indigo-500/50 bg-indigo-500/5"
       )}
     >
