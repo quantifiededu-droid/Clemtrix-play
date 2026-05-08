@@ -51,7 +51,12 @@ export default function Dashboard() {
           console.error('Profile fetch error:', profileError);
         }
         
-        if (mounted) setUserData(profile || null);
+        if (mounted) {
+          setUserData(profile || null);
+          if (!profile) {
+            navigate('/onboarding');
+          }
+        }
 
         // Fetch Progress from Supabase
         const { data: progressData, error: progressError } = await supabase

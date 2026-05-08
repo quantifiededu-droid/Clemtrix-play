@@ -46,7 +46,19 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         navigate('/onboarding');
       } else {
         await signInWithEmailAndPassword(auth, data.email, data.password);
-        navigate('/dashboard');
+        
+        // Double check profile for email login too
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', auth.currentUser!.uid)
+          .maybeSingle();
+          
+        if (profile) {
+          navigate('/dashboard');
+        } else {
+          navigate('/onboarding');
+        }
       }
     } catch (e: any) {
       setError(e.message);

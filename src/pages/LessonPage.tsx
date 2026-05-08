@@ -15,7 +15,8 @@ import {
   Info,
   Lightbulb,
   Keyboard,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
