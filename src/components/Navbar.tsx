@@ -69,7 +69,7 @@ export const Navbar: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-x-4">
-                  <button onClick={handleLogin} className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                  <button onClick={() => navigate('/auth/login')} className="text-sm font-medium text-slate-400 hover:text-white transition-colors">
                     Log in
                   </button>
                   <Button variant="primary" size="sm" onClick={() => navigate('/auth/signup')} className="rounded-lg">

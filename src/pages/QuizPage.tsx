@@ -90,6 +90,14 @@ export default function QuizPage() {
     }
   };
 
+  const handleRetake = () => {
+    setCurrentStep(0);
+    setSelectedOption(null);
+    setIsAnswered(false);
+    setScore(0);
+    setShowResults(false);
+  };
+
   if (showResults) {
     const total = lesson.quizQuestions.length;
     const passed = (score / total) >= 0.6;
@@ -129,12 +137,13 @@ export default function QuizPage() {
                 Continue to Dashboard
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-            ) : (
-              <Button size="lg" onClick={() => window.location.reload()}>
-                <RotateCcw className="mr-2 w-5 h-5" />
-                Try Again
-              </Button>
-            )}
+            ) : null}
+            
+            <Button size="lg" variant={passed ? "outline" : "primary"} onClick={handleRetake}>
+              <RotateCcw className="mr-2 w-5 h-5" />
+              Retake Quiz
+            </Button>
+
             <Button variant="outline" size="lg" onClick={() => navigate(`/lessons/${lessonId}`)}>
               Review Lesson
             </Button>
