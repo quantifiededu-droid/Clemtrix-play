@@ -19,6 +19,7 @@ import {
   Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AISongMaster } from '../components/AISongMaster';
 
 export default function LessonPage() {
   const { lessonId } = useParams();
@@ -277,6 +278,10 @@ export default function LessonPage() {
                 )}
               </div>
             ))}
+
+            {lesson.id === 'adv-8' && (
+              <AISongMaster />
+            )}
           </div>
 
           <div className="pt-12 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center gap-4">
