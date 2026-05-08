@@ -16,14 +16,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     return onAuthStateChanged(auth, (u) => {
+      console.log('Auth: user state changed', u?.uid ? `Logged in: ${u.uid}` : 'Logged out');
       setUser(u);
       setLoading(false);
     });
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-      <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-white/20 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p className="text-white text-sm animate-pulse font-medium">Loading your journey...</p>
+      </div>
     </div>
   );
 

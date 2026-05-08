@@ -18,7 +18,7 @@ import {
   ExternalLink,
   Music2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
 export default function Dashboard() {
@@ -27,6 +27,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoError, setPromoError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,27 +36,31 @@ export default function Dashboard() {
 
     async function fetchData() {
       if (!auth.currentUser) {
-        // Just in case, set loading to false if we somehow reach here without a user
+        console.warn('Dashboard: No currentUser found');
         if (mounted) setLoading(false);
         return;
       }
       
+      console.log('Dashboard: Fetching data for user:', auth.currentUser.uid);
       try {
+        setLoading(true);
         // Fetch User Data from Supabase
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', auth.currentUser.uid)
-          .single();
+          .maybeSingle();
         
-        if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is empty result
+        if (profileError) {
           console.error('Profile fetch error:', profileError);
         }
         
         if (mounted) {
           setUserData(profile || null);
           if (!profile) {
+            console.log('No profile found, redirecting to onboarding...');
             navigate('/onboarding');
+            return;
           }
         }
 
@@ -81,20 +87,20 @@ export default function Dashboard() {
       }
     }
 
-    // Use a small delay or trust auth.currentUser if we are in a ProtectedRoute
     fetchData();
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [navigate]); // navigate is stable, but we can add auth.currentUser if we really want to реагировать на изменения пользователя
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12 space-y-8 animate-pulse">
-        <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-3xl" />
+      <div className="max-w-7xl mx-auto px-4 py-12 space-y-8 animate-pulse bg-gray-900/50 min-h-screen">
+        <div className="text-white text-xs opacity-50 mb-4">Loading content...</div>
+        <div className="h-32 bg-gray-800 rounded-3xl" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1,2,3].map(i => <div key={i} className="h-40 bg-gray-100 dark:bg-gray-800 rounded-2xl" />)}
+          {[1,2,3].map(i => <div key={i} className="h-40 bg-gray-800 rounded-2xl" />)}
         </div>
       </div>
     );
@@ -128,9 +134,6 @@ export default function Dashboard() {
     }
     navigate(`/lessons/${lessonId}`);
   };
-
-  const [promoCode, setPromoCode] = useState('');
-  const [promoError, setPromoError] = useState('');
 
   const handleUnlockPremium = async () => {
     if (!auth.currentUser) return;

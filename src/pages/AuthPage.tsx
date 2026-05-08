@@ -45,13 +45,14 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         }
         navigate('/onboarding');
       } else {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        const result = await signInWithEmailAndPassword(auth, data.email, data.password);
+        const user = result.user;
         
         // Double check profile for email login too
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
-          .eq('id', auth.currentUser!.uid)
+          .eq('id', user.uid)
           .maybeSingle();
           
         if (profile) {
@@ -110,7 +111,11 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       if (e.code === 'auth/unauthorized-domain') {
         const domain = window.location.hostname;
         setError(`Firebase Error: Unauthorized Domain (${domain}). 
-          FIX: Go to Firebase Console > Auth > Settings > Authorized Domains and add this domain.`);
+          To fix this: 
+          1. Go to Firebase Console > Authentication > Settings
+          2. Find "Authorized Domains"
+          3. Click "Add Domain" and add "${domain}"
+          4. Refresh this page and try again.`);
       } else {
         setError(e.message);
       }

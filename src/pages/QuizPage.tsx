@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
 import { Card, Badge, ProgressBar } from '../components/ui/Layout';
 import { Check, X, Trophy, ArrowRight, RotateCcw, PartyPopper, Info } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { cn } from '../lib/utils';
 

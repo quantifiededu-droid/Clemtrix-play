@@ -18,7 +18,7 @@ import {
   ArrowRight,
   Clock
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function LessonPage() {
   const { lessonId } = useParams();

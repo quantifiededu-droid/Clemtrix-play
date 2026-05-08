@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as Tone from 'tone';
 import { cn } from '../lib/utils';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 interface PianoKeyboardProps {
   highlightedKeys?: string[];

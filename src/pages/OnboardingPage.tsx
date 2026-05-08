@@ -5,7 +5,7 @@ import { db, auth } from '../lib/firebase';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Layout';
 import { GraduationCap, Keyboard, Music2, Trophy, Clock, Target } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
